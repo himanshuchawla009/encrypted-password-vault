@@ -22,6 +22,11 @@ const schemaValidator = {
         "string.empty": "'email' cannot be an empty field",
         "any.required": "'email' is a required field",
       }),
+      userEmail: Joi.string().email().required().messages({
+        "string.email": "'email' should be a valid email",
+        "string.empty": "'email' cannot be an empty field",
+        "any.required": "'email' is a required field",
+      }),
       access: Joi.string().valid("owner", "user"),
     }),
   },
@@ -33,7 +38,16 @@ const schemaValidator = {
         "string.empty": "'email' cannot be an empty field",
         "any.required": "'email' is a required field",
       }),
-      access: Joi.string().valid("owner", "user"),
+    }),
+  },
+  fetchUser: {
+    query: Joi.object().keys({
+      pubKey: Joi.string().required(),
+      email: Joi.string().email().required().messages({
+        "string.email": "'email' should be a valid email",
+        "string.empty": "'email' cannot be an empty field",
+        "any.required": "'email' is a required field",
+      }),
     }),
   },
 };

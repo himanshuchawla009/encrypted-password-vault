@@ -20,7 +20,8 @@ export default class ipfsConnector {
   }
 
   static async uploadToIpfs(data) {
-    await ipfsConnector.ipfsClient.add({ content: data, options: { onlyHash: true } });
+    const hash = await ipfsConnector.ipfsClient.add({ content: data, options: { onlyHash: true } });
+    return hash;
   }
 
   static async downloadFromIpfs(pathHash) {

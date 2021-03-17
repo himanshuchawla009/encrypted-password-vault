@@ -12,7 +12,7 @@ const USERS_TABLE_NAME = "users";
 controller.registerUser = async (req, res) => {
   try {
     const { pubKey, email } = req.body;
-    const userExist = await knexRead(TABLE_NAME).where({ email });
+    const userExist = await knexRead(USERS_TABLE_NAME).where({ email });
     if (userExist) {
       return res.status(400).json({
         success: false,
@@ -37,10 +37,34 @@ controller.registerUser = async (req, res) => {
   }
 };
 
+controller.fetchUser = async (req, res) => {
+  try {
+    const { pubKey, email } = req.body;
+    const searchParams = {};
+    if (pubKey) {
+      searchParams["publicKey"] = pubKey;
+    }
+    if (email) {
+      searchParams["email"] = email;
+    }
+    const userExist = await knexRead(USERS_TABLE_NAME).where({ searchParams });
+    return res.json({
+      success: true,
+      data: userExist,
+    });
+  } catch (error) {
+    log.error("Error while registering user", error);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong!",
+    });
+  }
+};
+
 controller.savePassword = async (req, res) => {
   try {
-    const { encPwd, encMasterKey, pubKey, ownerEmail, access } = req.body;
-    const userExist = await knexRead(TABLE_NAME).where({ email: ownerEmail });
+    const { encPwd, encMasterKey, pubKey, ownerEmail, userEmail, access } = req.body;
+    const userExist = await knexRead(USERS_TABLE_NAME).where({ email: ownerEmail });
     if (!userExist) {
       return res.status(400).json({
         success: false,
@@ -52,7 +76,7 @@ controller.savePassword = async (req, res) => {
       encryptedMasterKey: encMasterKey,
       publicKey: pubKey,
       ownerEmail,
-      userEmail: ownerEmail,
+      userEmail,
       access,
     };
     await knexWrite(TABLE_NAME).insert(pwdObj);
