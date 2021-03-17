@@ -25,6 +25,17 @@ const schemaValidator = {
       access: Joi.string().valid("owner", "user"),
     }),
   },
+  registerUser: {
+    body: Joi.object().keys({
+      pubKey: Joi.string().required(),
+      email: Joi.string().email().required().messages({
+        "string.email": "'email' should be a valid email",
+        "string.empty": "'email' cannot be an empty field",
+        "any.required": "'email' is a required field",
+      }),
+      access: Joi.string().valid("owner", "user"),
+    }),
+  },
 };
 
 module.exports = schemaValidator;

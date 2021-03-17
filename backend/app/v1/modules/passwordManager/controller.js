@@ -7,9 +7,46 @@ const log = createLogger("authentication/controller.js");
 const controller = Object.create(null);
 
 const TABLE_NAME = "passwords";
+const USERS_TABLE_NAME = "users";
+
+controller.registerUser = async (req, res) => {
+  try {
+    const { pubKey, email } = req.body;
+    const userExist = await knexRead(TABLE_NAME).where({ email });
+    if (userExist) {
+      return res.status(400).json({
+        success: false,
+        message: "User with provided email already exists",
+      });
+    }
+    const userObj = {
+      publicKey: pubKey,
+      email,
+    };
+    await knexWrite(USERS_TABLE_NAME).insert(userObj);
+    return res.json({
+      success: true,
+      message: "User registered successfully",
+    });
+  } catch (error) {
+    log.error("Error while registering user", error);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong!",
+    });
+  }
+};
+
 controller.savePassword = async (req, res) => {
   try {
     const { encPwd, encMasterKey, pubKey, ownerEmail, access } = req.body;
+    const userExist = await knexRead(TABLE_NAME).where({ email: ownerEmail });
+    if (!userExist) {
+      return res.status(400).json({
+        success: false,
+        message: "User email not found, Please register first",
+      });
+    }
     const pwdObj = {
       encryptedPassword: encPwd,
       encryptedMasterKey: encMasterKey,
