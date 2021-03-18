@@ -2,7 +2,8 @@
 import React, { useEffect } from "react";
 import { Switch, Route } from "react-router-dom";
 import Home from "./containers/Home";
-
+import Login from "./containers/login";
+import "antd/dist/antd.css"; // or 'antd/dist/antd.less'
 import "./App.scss";
 
 function App() {
@@ -22,6 +23,9 @@ function App() {
     <div className="App">
       <Switch>
         <Route path="/" exact>
+          <Login />
+        </Route>
+        <Route path="/dashboard" exact>
           <Home />
         </Route>
       </Switch>

@@ -75,10 +75,26 @@ a {
   justify-content: center;
   align-items: center;
   background: #F6F5F7;
-  width: 85px;
-  height: 85px;
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
   border-width: 7px;
   border-style: solid;
   border-color: white;
+}
+
+.btn {
+  background: linear-gradient(92.85deg,#0364ff,#1ac7fe 101.17%);
+  text-transform: inherit;
+  font-size: 1.5rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+  border-radius: 10px;
+  color: white;
+  min-width: 64px;
+  height: 40px;
+  padding-right: 48px!important;
+  padding-left: 48px!important;
+  padding-top:  5px!important;
+  cursor: pointer;
 }
