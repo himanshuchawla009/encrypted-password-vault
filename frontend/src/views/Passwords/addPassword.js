@@ -11,7 +11,7 @@ const tailLayout = {
   wrapperCol: { offset: 8, span: 16 },
 };
 
-function addPassword() {
+function addPassword(props) {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const showModal = () => {
@@ -25,6 +25,8 @@ function addPassword() {
   };
   const onFinish = (values) => {
     console.log("Success:", values);
+    props.handleSavePassword(values);
+    setIsModalVisible(false);
   };
 
   const onFinishFailed = (errorInfo) => {

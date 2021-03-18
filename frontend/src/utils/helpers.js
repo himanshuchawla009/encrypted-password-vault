@@ -1,5 +1,11 @@
 import { encrypt as ecEncrypt, decrypt as ecDecrypt } from "@toruslabs/eccrypto";
 
+// (async () => {
+//   const pkey = await generatePrivate();
+//   const pbKey = await getPublic(pkey);
+//   console.log("prvate", pkey.toString("hex"));
+//   console.log("public", pbKey.toString("hex"));
+// })();
 export async function encrypt(publicKey, msg) {
   const encryptedDetails = await ecEncrypt(publicKey, msg);
 

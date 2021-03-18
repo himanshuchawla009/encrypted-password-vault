@@ -1,8 +1,19 @@
 version: '3'
 
 services:
+  mysql:
+    # platform: linux/x86_64
+    restart: always
+    image: mysql:5.7
+    command: --max_allowed_packet=32505856
+    env_file:
+      - ./.env.development
+    ports:
+      - "3306:3306"
   openlogin-password-manager:
     restart: always
+    depends_on:
+      - mysql
     build:
       context: .
       dockerfile: Dockerfile.dev

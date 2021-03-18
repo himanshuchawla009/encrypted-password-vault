@@ -9,16 +9,17 @@ import IpfsManager from "./ipfs";
 import { storePwd, listPasswords, fetchUser } from "./apiManager";
 
 export default class PasswordManager {
-  constructor(rawPassword, domain, ownerEmail, privateKey, pubKey, access = "owner", masterKey = null) {
+  constructor(rawPassword, domain, ownerEmail, username, privateKey, pubKey, access = "owner", masterKey = null) {
     this.rawPassword = rawPassword;
     this.domain = domain;
     this.ownerEmail = ownerEmail;
+    this.username = username;
     this.privateKey = privateKey;
     this.publicKey = pubKey;
     this.masterKey = masterKey;
     this.access = access;
-    IpfsManager.connect();
-    this.IpfsManager = IpfsManager;
+    // IpfsManager.connect();
+    // this.IpfsManager = IpfsManager;
   }
 
   async savePassword() {
@@ -30,30 +31,44 @@ export default class PasswordManager {
     // encrypt pwd with master key
     const ciphertext = CryptoJS.AES.encrypt(this.rawPassword, this.masterKey).toString();
     // encrypt master key with pub key
-    const encMasterKey = await encrypt(this.publicKey, this.masterKey);
+    const encMasterKey = await encrypt(Buffer.from(this.publicKey, "hex"), Buffer.from(this.masterKey));
+    console.log("master", this.masterKey, ciphertext);
     // save enc master key and password in ipfs
     let ipfsData = {
       encMasterKey,
       encPassword: ciphertext,
     };
     ipfsData = ipfsData.toString();
-    const hash = await this.IpfsManager.uploadToIpfs(ipfsData);
+    const hash = ipfsData.toString("hex");
+    // const hash = await this.IpfsManager.uploadToIpfs(ipfsData);
     // save enc master key , enc pwd and ipfs hash in db
-    await storePwd(ciphertext, encMasterKey, this.publicKey, this.ownerEmail, this.ownerEmail);
-    return hash;
+    const res = await storePwd(
+      ciphertext,
+      // eslint-disable-next-line no-undef
+      window.btoa(JSON.stringify(encMasterKey)),
+      this.publicKey,
+      this.ownerEmail,
+      this.username,
+      this.ownerEmail,
+      hash,
+      this.domain
+    );
+    return res;
   }
 
-  async showPassword() {
+  async showPassword(encMasterKey, encPassword) {
     // eslint-disable-next-line no-undef
     const { CryptoJS } = window;
-    if (!this.masterKey) {
+    if (!encMasterKey) {
       throw new Error("Invalid master key");
     }
     // decrypt master key with private key
-    const decMasterKey = await decrypt(this.privateKey, this.masterKey);
+    const decMasterKey = await decrypt(Buffer.from(this.privateKey, "hex"), encMasterKey);
     // decrypt password with master key and return
-    const rawPwd = CryptoJS.AES.decrypt(this.rawPassword, decMasterKey).toString();
-    return rawPwd;
+    const rawPwd = CryptoJS.AES.decrypt(encPassword, decMasterKey.toString());
+    this.rawPassword = CryptoJS.enc.Latin1.stringify(rawPwd);
+    this.masterKey = decMasterKey;
+    return this.rawPassword;
   }
 
   // async changePassword(newPassword){
@@ -71,11 +86,11 @@ export default class PasswordManager {
     }
     // fetch user pub key
     const existingUser = await fetchUser(userEmail);
-    if (!existingUser.data) {
+    if (existingUser.data.length === 0) {
       throw new Error("Invalid user, user must be registered before password can be shared");
     }
     const userDetails = {
-      publicKey: existingUser.data.publicKey,
+      publicKey: existingUser.data[0].publicKey,
     };
     // encrypt pwd with master key
     const ciphertext = CryptoJS.AES.encrypt(this.rawPassword, this.masterKey).toString();
@@ -86,12 +101,23 @@ export default class PasswordManager {
       encMasterKey,
       encPassword: ciphertext,
     };
-    ipfsData = ipfsData.toString();
-    const hash = await this.IpfsManager.uploadToIpfs(ipfsData);
+    ipfsData = ipfsData.toString("hex");
+    // const hash = await this.IpfsManager.uploadToIpfs(ipfsData);
 
     // save enc master key , enc pwd and ipfs hash in db
-    await storePwd(ciphertext, encMasterKey, userDetails.publicKey, this.ownerEmail, userEmail, "user");
-    return hash;
+    const res = await storePwd(
+      ciphertext,
+      // eslint-disable-next-line no-undef
+      window.btoa(JSON.stringify(encMasterKey)),
+      userDetails.publicKey,
+      this.ownerEmail,
+      this.username,
+      userEmail,
+      ipfsData,
+      this.domain,
+      "user"
+    );
+    return res;
   }
 
   // async deletePassword(){

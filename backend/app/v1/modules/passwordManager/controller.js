@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-boolean-cast */
 /* eslint-disable dot-notation */
 const { knexRead, knexWrite } = require("../../../../database");
 const createLogger = require("../../../../helpers/createLogger");
@@ -13,10 +14,10 @@ controller.registerUser = async (req, res) => {
   try {
     const { pubKey, email } = req.body;
     const userExist = await knexRead(USERS_TABLE_NAME).where({ email });
-    if (userExist) {
+    if (userExist.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "User with provided email already exists",
+        message: "User with provided username already exists",
       });
     }
     const userObj = {
@@ -39,7 +40,14 @@ controller.registerUser = async (req, res) => {
 
 controller.fetchUser = async (req, res) => {
   try {
-    const { pubKey, email } = req.body;
+    const queryKeys = Object.keys(req.query);
+    queryKeys.forEach((key) => {
+      console.log("key", req.query[key]);
+      if (req.query[key] === "undefined") {
+        req.query[key] = undefined;
+      }
+    });
+    const { pubKey, email } = req.query;
     const searchParams = {};
     if (pubKey) {
       searchParams["publicKey"] = pubKey;
@@ -47,7 +55,7 @@ controller.fetchUser = async (req, res) => {
     if (email) {
       searchParams["email"] = email;
     }
-    const userExist = await knexRead(USERS_TABLE_NAME).where({ searchParams });
+    const userExist = await knexRead(USERS_TABLE_NAME).where(searchParams);
     return res.json({
       success: true,
       data: userExist,
@@ -63,7 +71,7 @@ controller.fetchUser = async (req, res) => {
 
 controller.savePassword = async (req, res) => {
   try {
-    const { encPwd, encMasterKey, pubKey, ownerEmail, userEmail, access } = req.body;
+    const { encPwd, encMasterKey, pubKey, ownerEmail, userEmail, access, username, domain, hash } = req.body;
     const userExist = await knexRead(USERS_TABLE_NAME).where({ email: ownerEmail });
     if (!userExist) {
       return res.status(400).json({
@@ -78,6 +86,9 @@ controller.savePassword = async (req, res) => {
       ownerEmail,
       userEmail,
       access,
+      username,
+      domain,
+      hash,
     };
     await knexWrite(TABLE_NAME).insert(pwdObj);
     return res.json({
@@ -98,21 +109,29 @@ controller.savePassword = async (req, res) => {
 // todo: get userEmail or ownerEmail from authentication token/signature
 controller.fetchPasswords = async (req, res) => {
   try {
+    const queryKeys = Object.keys(req.query);
+    queryKeys.forEach((key) => {
+      console.log("key", req.query[key]);
+      if (req.query[key] === "undefined") {
+        req.query[key] = undefined;
+      }
+    });
     const { access, pubKey, ownerEmail, userEmail } = req.query;
     const searchParams = {};
 
-    if (access) {
+    if (!!access) {
       searchParams["access"] = access;
     }
-    if (pubKey) {
-      searchParams["pubKey"] = pubKey;
+    if (!!pubKey) {
+      searchParams["publicKey"] = pubKey;
     }
-    if (ownerEmail) {
+    if (!!ownerEmail) {
       searchParams["ownerEmail"] = ownerEmail;
     }
-    if (userEmail) {
+    if (!!userEmail) {
       searchParams["userEmail"] = userEmail;
     }
+    console.log("search parsm", searchParams);
     const data = await knexRead(TABLE_NAME).where(searchParams).orderBy("created_at", "desc");
     return res.json({
       success: true,

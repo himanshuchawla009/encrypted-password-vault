@@ -8,9 +8,12 @@ exports.up = function (knex) {
       table.string("access", 255).notNullable();
       table.string("ownerEmail", 255).notNullable();
       table.string("userEmail", 255).notNullable();
+      table.string("domain", 255).notNullable();
+      table.string("username", 255).notNullable();
+      table.text("hash", "mediumtext").notNullable();
       table.string("publicKey", 255).notNullable();
-      table.string("encryptedMasterKey", "mediumtext").notNullable();
-      table.string("encryptedPassword", "mediumtext").notNullable();
+      table.text("encryptedMasterKey", "longtext").notNullable();
+      table.text("encryptedPassword", "mediumtext").notNullable();
     })
     .createTable("users", (table) => {
       table.increments("id").primary();

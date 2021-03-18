@@ -1,17 +1,15 @@
 export default class ipfsConnector {
   static ipfsClient = null;
 
-  // eslint-disable-next-line no-undef
-  static IpfsHttpClient = window.IpfsHttpClient;
-
   static connect() {
     if (ipfsConnector.ipfsClient) {
       return ipfsConnector.ipfsClient;
     }
-    ipfsConnector.ipfsClient = ipfsConnector.IpfsHttpClient({
+    // eslint-disable-next-line no-undef
+    ipfsConnector.ipfsClient = window.IpfsHttpClient({
       host: process.env.IPFS_HOSTNAME,
       port: process.env.IPFS_PORT,
-      protocol: process.env.IPFS_PROTOCOL,
+      protocol: "https",
       headers: {
         authorization: `Bearer ${process.env.INFURA_IPFS_AUTH_TOKEN}`,
       },

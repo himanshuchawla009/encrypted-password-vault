@@ -11,27 +11,24 @@ const tailLayout = {
   wrapperCol: { offset: 8, span: 16 },
 };
 
-function sharePassword(props) {
-  const handleCancel = () => {
-    props.closeModal();
-  };
+function newUser(props) {
   const onFinish = (values) => {
     console.log("Success:", values);
-    props.handleSharePassword(values);
+    props.registerUser(values);
   };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
   return (
-    <Modal title="Share Password" visible={props.isModalVisible} onCancel={handleCancel} footer={null}>
+    <Modal title="Share Password" visible={props.isModalVisible} footer={null}>
       <Form {...layout} name="basic" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed}>
-        <Form.Item label="Username" name="userEmail" rules={[{ required: true, message: "Please enter a valid username eg: user@gmail.com" }]}>
+        <Form.Item label="Username" name="email" rules={[{ required: true, message: "Please add your username" }]}>
           <Input />
         </Form.Item>
         <Form.Item {...tailLayout}>
           <Button type="primary" htmlType="submit">
-            Share
+            Submit
           </Button>
         </Form.Item>
       </Form>
@@ -39,4 +36,4 @@ function sharePassword(props) {
   );
 }
 
-export default sharePassword;
+export default newUser;
