@@ -6,12 +6,14 @@ import SharePassword from "./sharePassword";
 import Settings from "./settings";
 import PasswordManager from "../../modules/passwordManager";
 import { decrypt } from "../../utils/helpers";
+import { fetchPasswordsByText } from "../../modules/apiManager";
 // const PUBKEY = "042bef885573621fc4f62c748cde80f0acb92cdb39e5b1de0a8b371bf8bfb48be2a120842939edd48eacf88d0ac4d9cf4b365cf3c02e8481776a28a4ca874ba7f7";
 // const PRIVATE_KEY = "3b05ede11ae205e587ec1c8baf3fe24d18f62eb34bee617bd3e8927ae1a8ca89";
 function listPasswords(props) {
   const [shareModalVisible, toggleShareModal] = useState(false);
   const [settingsModalVisible, toggleSettingsModal] = useState(false);
   const [currentRow, setCurrentRow] = useState({});
+  const [sharedUsers, setSharedUsers] = useState([]);
 
   const onSharePassword = () => {
     toggleShareModal(!shareModalVisible);
@@ -45,7 +47,7 @@ function listPasswords(props) {
       );
       const res = await sharePwdInstance.sharePassword(values.userEmail);
       if (res.success) {
-        message.success(res.message);
+        message.success("Encrypted password shared successfully");
       } else {
         message.error(res.message);
       }
@@ -59,7 +61,14 @@ function listPasswords(props) {
     }
   };
 
-  const onSettingsClick = () => {
+  const onSettingsClick = async () => {
+    const res = await fetchPasswordsByText(currentRow.encryptedPassword);
+    if (res.success) {
+      setSharedUsers(res.data);
+    } else {
+      setSharedUsers([]);
+      message.error("Something went wrong");
+    }
     toggleSettingsModal(!settingsModalVisible);
   };
 
@@ -91,11 +100,11 @@ function listPasswords(props) {
     message.info(`Password: ${pwd}`, 5);
   };
 
-  const renderContent = (value, row, index, type = "text") => (
+  const renderContent = (value, row, index, type = "text", copy = true) => (
     <div style={{ display: "flex", flexDirection: "row", padding: 10 }}>
       {type === "password" ? <a>{"***********"}</a> : <a>{value}</a>}
       {type === "password" && <EyeOutlined style={{ cursor: "pointer", marginLeft: 5 }} onClick={() => onViewPassword(value, row, type)} />}
-      <CopyOutlined style={{ cursor: "pointer", marginLeft: 5 }} onClick={() => onCopy(value, row, type)} />
+      {copy && <CopyOutlined style={{ cursor: "pointer", marginLeft: 5 }} onClick={() => onCopy(value, row, type)} />}
     </div>
   );
 
@@ -103,8 +112,8 @@ function listPasswords(props) {
     setCurrentRow(record);
     return (
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around" }}>
-        <ShareAltOutlined onClick={onSharePassword} />
-        <SettingOutlined onClick={onSettingsClick} />
+        {record.access === "owner" && <ShareAltOutlined onClick={onSharePassword} />}
+        {record.access === "owner" && <SettingOutlined onClick={onSettingsClick} />}
       </div>
     );
   };
@@ -127,6 +136,12 @@ function listPasswords(props) {
       key: "id",
       dataIndex: "encryptedPassword",
       render: (value, row, index) => renderContent(value, row, index, "password"),
+    },
+    {
+      title: "Access",
+      key: "id",
+      dataIndex: "access",
+      render: (value, row, index) => renderContent(value, row, index, "text", false),
     },
     {
       title: "Actions",
@@ -173,7 +188,7 @@ function listPasswords(props) {
   return (
     <div>
       <SharePassword isModalVisible={shareModalVisible} closeModal={onSharePassword} handleSharePassword={handleSharePassword} />
-      <Settings isModalVisible={settingsModalVisible} closeModal={onSettingsClick} />
+      <Settings data={sharedUsers} isModalVisible={settingsModalVisible} closeModal={onSettingsClick} />
       <Table columns={columns} dataSource={props.passwords} bordered style={{ marginTop: 10 }} pagination={{ pageSize: 5 }} />
     </div>
   );

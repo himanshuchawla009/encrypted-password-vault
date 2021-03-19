@@ -95,7 +95,7 @@ export default class PasswordManager {
     // encrypt pwd with master key
     const ciphertext = CryptoJS.AES.encrypt(this.rawPassword, this.masterKey).toString();
     // encrypt master key with pub key
-    const encMasterKey = await encrypt(userDetails.publicKey, this.masterKey);
+    const encMasterKey = await encrypt(Buffer.from(userDetails.publicKey, "hex"), Buffer.from(this.masterKey));
     // save enc master key and password in ipfs
     let ipfsData = {
       encMasterKey,
@@ -111,8 +111,8 @@ export default class PasswordManager {
       window.btoa(JSON.stringify(encMasterKey)),
       userDetails.publicKey,
       this.ownerEmail,
-      this.username,
       userEmail,
+      this.username,
       ipfsData,
       this.domain,
       "user"

@@ -21,7 +21,7 @@ function sharePassword(props) {
   const columns = [
     {
       title: "User",
-      dataIndex: "user",
+      dataIndex: "username",
       render: (value, row, index) => renderContent(value, row, index),
     },
     {
@@ -53,7 +53,7 @@ function sharePassword(props) {
   ];
   return (
     <Modal title="Share Password" visible={props.isModalVisible} onCancel={handleCancel} footer={null}>
-      <Table columns={columns} dataSource={data} bordered style={{ marginTop: 10 }} />
+      <Table columns={columns} dataSource={props.data} bordered style={{ marginTop: 10 }} />
     </Modal>
   );
 }

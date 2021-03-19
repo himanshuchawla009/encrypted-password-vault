@@ -6,7 +6,7 @@ const { Joi } = require("celebrate");
 const schemaValidator = {
   fetchPasswords: {
     query: Joi.object().keys({
-      access: Joi.string().valid("owner", "user"),
+      access: Joi.string(),
       pubKey: Joi.string(),
       ownerEmail: Joi.string(),
       userEmail: Joi.string(),
@@ -35,6 +35,11 @@ const schemaValidator = {
     query: Joi.object().keys({
       pubKey: Joi.string(),
       email: Joi.string(),
+    }),
+  },
+  fetchPasswordsByText: {
+    query: Joi.object().keys({
+      encryptedPassword: Joi.string(),
     }),
   },
 };

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useCallback } from "react";
 import OpenLogin from "@toruslabs/openlogin";
-import { Link } from "react-router-dom";
+import { message } from "antd";
 import { useLocation, useHistory } from "react-router";
 import { parse } from "query-string";
 import Icon from "../../components/Icon/icon.jsx";
@@ -21,22 +21,33 @@ const verifiers = {
   },
 };
 function Login() {
+  const [isloading, setLoadingState] = useState(false);
+
   const { search } = useLocation();
   const history = useHistory();
   const [sdk, setSdk] = useState(undefined);
   useEffect(() => {
     async function initializeSdk() {
-      if (sdk) return;
-      const sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
-      // eslint-disable-next-line no-undef
-      window.openlogin = sdkInstance;
-      await sdkInstance.init();
-      setSdk(sdkInstance);
-      if (sdkInstance.privKey) {
-        console.log("private key: ", sdkInstance.privKey);
+      try {
+        if (sdk) return;
+        setLoadingState(true);
+        const sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
         // eslint-disable-next-line no-undef
-        window.sessionStorage.setItem("privateKey", sdkInstance.privKey);
-        history.push("/dashboard");
+        window.openlogin = sdkInstance;
+        await sdkInstance.init();
+        setSdk(sdkInstance);
+        setLoadingState(false);
+
+        if (sdkInstance.privKey) {
+          console.log("private key: ", sdkInstance.privKey);
+          // eslint-disable-next-line no-undef
+          window.sessionStorage.setItem("privateKey", sdkInstance.privKey);
+          history.push("/dashboard");
+        }
+      } catch (error) {
+        console.log("Error", error);
+        setLoadingState(false);
+        message.error(error.message ? error.message : "Something broke!");
       }
     }
 
@@ -51,6 +62,13 @@ function Login() {
   }, []);
 
   async function triggerLogin() {
+    // let sdkInstance = sdk;
+    // if (!sdkInstance) {
+    //   sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
+    //   // eslint-disable-next-line no-undef
+    //   window.openlogin = sdkInstance;
+    //   setSdk(sdkInstance);
+    // }
     await sdk.login({
       loginProvider: "google",
       redirectUrl: "http://localhost:3020",
@@ -61,11 +79,17 @@ function Login() {
     await triggerLogin();
   }
   return (
-    <div className="container">
-      <h1 style={{ textAlign: "center" }}>Protects and remembers passwords for you</h1>
-      <div onClick={handleLogin} className="btn">
-        Login
-      </div>
+    <div className="loginContainer">
+      {isloading ? (
+        <Loader isDone={!isloading} />
+      ) : (
+        <div className="loginContainer">
+          <h1 style={{ textAlign: "center" }}>Protects and remembers passwords for you</h1>
+          <div onClick={handleLogin} className="btn">
+            Login
+          </div>
+        </div>
+      )}
     </div>
   );
 }

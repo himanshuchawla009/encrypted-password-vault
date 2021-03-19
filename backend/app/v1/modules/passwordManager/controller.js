@@ -69,11 +69,40 @@ controller.fetchUser = async (req, res) => {
   }
 };
 
+controller.fetchPasswordsByText = async (req, res) => {
+  try {
+    const queryKeys = Object.keys(req.query);
+    queryKeys.forEach((key) => {
+      console.log("key", req.query[key]);
+      if (req.query[key] === "undefined") {
+        req.query[key] = undefined;
+      }
+    });
+    const { encryptedPassword } = req.query;
+    const searchParams = {};
+    if (encryptedPassword) {
+      searchParams["encryptedPassword"] = encryptedPassword;
+    }
+
+    const passwords = await knexRead(TABLE_NAME).where(searchParams);
+    return res.json({
+      success: true,
+      data: passwords,
+    });
+  } catch (error) {
+    log.error("Error while fetching passwords", error);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong!",
+    });
+  }
+};
+
 controller.savePassword = async (req, res) => {
   try {
     const { encPwd, encMasterKey, pubKey, ownerEmail, userEmail, access, username, domain, hash } = req.body;
-    const userExist = await knexRead(USERS_TABLE_NAME).where({ email: ownerEmail });
-    if (!userExist) {
+    const userExist = await knexRead(USERS_TABLE_NAME).where({ email: userEmail });
+    if (userExist.length === 0) {
       return res.status(400).json({
         success: false,
         message: "User email not found, Please register first",
