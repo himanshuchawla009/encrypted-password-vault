@@ -27,7 +27,7 @@ const verifiers = {
 // const PRIVATE_KEY = "3b05ede11ae205e587ec1c8baf3fe24d18f62eb34bee617bd3e8927ae1a8ca89";
 function Home() {
   const [sdk, setSdk] = useState(undefined);
-  const { search } = useLocation();
+  const location = useLocation();
   const history = useHistory();
   const [isloading, setLoadingState] = useState(false);
   const [isNewUser, setNewUser] = useState(false);
@@ -45,18 +45,17 @@ function Home() {
 
   useEffect(() => {
     async function initializeUserInfo() {
-      if (sdk) return;
+      setLoadingState(true);
       const sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
-      // eslint-disable-next-line no-undef
-      window.openlogin = sdkInstance;
-      setSdk(sdkInstance);
-      // eslint-disable-next-line no-undef
-      const privateKey = window.sessionStorage.getItem("privateKey");
-      console.log(privateKey, "private key");
-      if (!privateKey) {
-        history.push("/");
-        return;
+      await sdkInstance.init();
+      if (!sdkInstance.privKey) {
+        await sdkInstance.login({
+          loginProvider: "google",
+          redirectUrl: "http://localhost:3020/dashboard",
+        });
       }
+      const privateKey = sdkInstance.privKey;
+      setSdk(sdkInstance);
       const pubKey = await getPublic(Buffer.from(privateKey, "hex"));
       const user = await fetchUser(undefined, pubKey.toString("hex"));
       if (user.data.length > 0) {
@@ -75,6 +74,7 @@ function Home() {
         });
         setNewUser(true);
       }
+      setLoadingState(false);
     }
     initializeUserInfo();
   }, []);
@@ -132,10 +132,7 @@ function Home() {
 
   const handleLogout = async () => {
     setLoadingState(true);
-    // eslint-disable-next-line no-undef
-    const windowObj = window;
     await sdk.logout();
-    windowObj.sessionStorage.removeItem("privateKey");
     setLoadingState(false);
     history.push("/");
   };
@@ -153,7 +150,9 @@ function Home() {
       ,
       <NewUser isModalVisible={isNewUser} registerUser={handleRegisterUser} />
       {isloading ? (
-        <Loader isDone={!isloading} />
+        <div className="container">
+          <Loader isDone={!isloading} />
+        </div>
       ) : (
         <div className="container">
           <div style={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center", alignItems: "center" }}>
