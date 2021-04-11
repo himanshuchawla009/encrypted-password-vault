@@ -1,8 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useCallback } from "react";
+import OpenLogin from "openlogin";
 import { useLocation, useHistory } from "react-router";
-import "./style.scss";
+import "./style.css";
 
 const GOOGLE = "google";
 const verifiers = {
@@ -13,20 +14,43 @@ const verifiers = {
     verifier: "google-lrc",
   },
 };
+
 function Login() {
-  const history = useHistory();
-  async function handleLogin() {
-    history.push({
-      pathname: "/dashboard",
+  const [sdk, setSdk] = useState(undefined);
+  useEffect(() => {
+    async function initializeUserInfo() {
+      const sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
+      setSdk(sdkInstance);
+    }
+    initializeUserInfo();
+  }, []);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+
+    await sdk.login({
+      extraLoginOptions: {
+        login_hint: e.target[0].value,
+      },
+      relogin: true,
+      loginProvider: "email_passwordless",
+      redirectUrl: `${window.origin}/dashboard`,
     });
   }
   return (
-    <div className="loginContainer">
+    <div className="content-center">
       <div className="loginContainer">
         <h1 style={{ textAlign: "center" }}>Protects and remembers passwords for you</h1>
-        <div onClick={handleLogin} className="btn">
-          Login
-        </div>
+        <form onSubmit={handleLogin}>
+          <div className="col">
+            <div style={{ marginBottom: 20 }}>
+              <input type="email" required placeholder="Email" className="custom-input" />
+            </div>
+            <button type="submit" className="btn-light">
+              Sign in with email
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

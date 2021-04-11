@@ -4,7 +4,7 @@ import { message, PageHeader, Button } from "antd";
 import { Link } from "react-router-dom";
 import { useLocation, useHistory } from "react-router";
 import { getPublic } from "@toruslabs/eccrypto";
-import OpenLogin from "@toruslabs/openlogin";
+import OpenLogin from "openlogin";
 import Loader from "../../components/Loader/loader.jsx";
 import PasswordList from "../../views/Passwords/listing";
 import AddPassword from "../../views/Passwords/addPassword";
@@ -23,8 +23,6 @@ const verifiers = {
   },
 };
 
-// const PUBKEY = "042bef885573621fc4f62c748cde80f0acb92cdb39e5b1de0a8b371bf8bfb48be2a120842939edd48eacf88d0ac4d9cf4b365cf3c02e8481776a28a4ca874ba7f7";
-// const PRIVATE_KEY = "3b05ede11ae205e587ec1c8baf3fe24d18f62eb34bee617bd3e8927ae1a8ca89";
 function Home() {
   const [sdk, setSdk] = useState(undefined);
   const location = useLocation();
@@ -48,11 +46,10 @@ function Home() {
       setLoadingState(true);
       const sdkInstance = new OpenLogin({ clientId: verifiers.google.clientId, iframeUrl: "http://beta.openlogin.com" });
       await sdkInstance.init();
+      console.log("ro", sdkInstance.privKey);
       if (!sdkInstance.privKey) {
-        await sdkInstance.login({
-          loginProvider: "google",
-          redirectUrl: "http://localhost:3020/dashboard",
-        });
+        history.push("/");
+        return;
       }
       const privateKey = sdkInstance.privKey;
       setSdk(sdkInstance);
